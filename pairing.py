@@ -5,7 +5,7 @@ if __name__ == '__main__':
     print(G2)
     P = multiply(G1, 3)
     Q = multiply(G2, 2)
-    #print(pairing(P, Q))
+    print(pairing(Q, P))
     A = multiply(G2, 5)
     B = multiply(G1, 6)
     print(pairing(A, B))
