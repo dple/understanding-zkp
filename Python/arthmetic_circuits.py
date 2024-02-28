@@ -1,5 +1,5 @@
 """
-
+Demonstrate some ZKP examples in Python
 """
 
 # 1. Prove b is the inverse of a
@@ -13,8 +13,7 @@ a = 15
 b = compute_inverse(a)
 
 # Verifier --> just verify, won't carry out computation
-print(a*b)
-assert (a*b) % base_field == 1
+assert (a*b) % base_field == 1, "Given number is not an inverse of a"
 
 # 2. Prove x is the solution of a polynomial
 def polyeval(x, a, b, c):
@@ -28,7 +27,7 @@ c = 11
 s = polyeval(x, a, b, c)
 
 # Verifier  --> just verify, won't carry out computation
-assert s == 0
+assert s == 0, "Given x is not a solution of the polynomial"
 
 # 3. Proving x is the maximum element in a list of elements
 def maxList(lst):
@@ -40,7 +39,7 @@ m = maxList(lst)
 x = 11
 
 # Verifier --> just verify, won't carry out computation
-assert x == m
+assert x == m, "Given input is not the maximum of the list"
 
 # 4. Prove if the given list was sorted
 
@@ -49,5 +48,13 @@ lst = [1, 2, 3, 4, 5, 6]
 sortedList = sorted(lst)
 
 # Verifier
-assert lst == sortedList
+assert lst == sortedList, "List is not sorted"
+
+# 5. Prove if the list has no duplicates
+
+# Prover --> convert the list to a set, then compare their size
+s = set(lst)
+
+# Verifier
+assert len(lst) == len(s), "List contains duplicates"
 
