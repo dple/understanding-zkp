@@ -3,7 +3,7 @@ import galois
 import random
 
 # Define a finite field
-base_field = 131 #21888242871839275222246405745257275088548364400416034343698204186575808495617
+base_field = 131        # Just take a small prime number
 Fp = galois.GF(base_field)
 # 1. Prover --> prove the computation out <== x*y
 # Define the matrices for constraints
