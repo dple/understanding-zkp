@@ -6,14 +6,14 @@ if __name__ == '__main__':
     P = multiply(G1, 3)
     Q = add(G2, G2)
     """
-    py-ecc library implemented Ate pairing, that switches the order of P & Q, 
-    that is the first argument of pairing will be the element, Q, in the extension field F_pˆ12, 
-    and the second argument, P, will be in the base field F_p   
+    py-ecc library implemented Optimal Ate pairing (https://eprint.iacr.org/2006/110.pdf), 
+    that switches the order of P & Q, i.e., the first argument of pairing will be the element, Q, 
+    in the extension field F_pˆ12, and the second argument, P, will be in the base field F_p   
     """
     print(pairing(Q, P))        # The result will be an element in the extension field, F_pˆ12,
                                 # representing by 12 element in the base field.
                                 # The computation takes a few seconds, pretty slow,
-                                # perhaps because the implementation of pairing in py-ecc is not optimized
+                                # perhaps the implementation of pairing in py-ecc is not optimized
 
     # As pairing(a*G2, b*G1) == pairing(a*b*G2, G1), the following return true
     T = multiply(G2, 6)
