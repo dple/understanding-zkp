@@ -1,24 +1,42 @@
-"""
-Evaluate the polynomial return 5xˆ3 - 4xˆ2yˆ2 + 13xyˆ2 + xˆ2 - 10y,
-that could be represent by five quadratic constraints
-v1 <== x*x
-v2 <== 5*v1*x
-v3 <== y*y
-v4 <== 13*x*v3
-v5 <== 4*v1*v3
-out <== v2 - v5 + v4 + v1 - 10*y
-"""
-
-
-def poly(x, y):
-    return 5 * x ** 3 - 4 * x ** 2 * y ** 2 + 13 * x * y ** 2 + x ** 2 - 10 * y
-
-
-def magma(x, y, z):
-    assert x ** (y ** z) != (x ** y) ** z
-    assert x ** y != y ** x
-
+import numpy as np
+from scipy.interpolate import lagrange
 
 if __name__ == '__main__':
-    print(poly(3, 5))
-    magma(2, 3, 4)
+    x = np.array([1, 2, 3])
+    y_v1 = np.array([4, 12, 8])     # vector v1
+    y_v2 = np.array([2, 2, -2])     # vector v2
+
+    poly_v1 = lagrange(x, y_v1)     # Using lagrange to compute a polynomial from v1
+    print("Poly v1 = ", poly_v1)
+    poly_v2 = lagrange(x, y_v2)     # Using lagrange to compute a polynomial from v2
+    print("Poly v2 = ", poly_v2)
+
+    # 1. Adding two vectors v1, v2
+    y_vA = y_v1 + y_v2
+    # Homomorphic to adding two polynomials
+    poly_vA = lagrange(x, y_vA)
+    print("Sum of polynomials v1 + v2:", poly_vA)
+    result = poly_vA == poly_v1 + poly_v2
+
+    assert result.all(), "Add not equal!"
+
+    # 2. Multiplication (Hadamard product) of two vectors v1 and v2
+    y_vM = np.multiply(y_v1, y_v2)
+    print("Inner product of v1 & v2", y_vM)
+    # Homomorphic to multiplying two polynomials
+    poly_vM = poly_v1 * poly_v2
+    print("Product of two polynomials: ", poly_vM)
+    print("Evaluate the poly product at 1, 2, 3 =", poly_vM(1), poly_vM(2),  poly_vM(3))
+    result = y_vM == np.array([poly_vM(1), poly_vM(2),  poly_vM(3)]).astype(int)
+
+    assert result.all(), "Multiply not equal!"
+
+    # 3. Multiplying a vector by a scalar
+    y_v3 = y_v1 * 3
+    print("Scalar multiplication of vector v1: ", y_v3)
+    # Homomorphic to multiplying the polynomial by the same scalar
+    poly_v3 = poly_v1 * 3
+
+    result = lagrange(x, y_v3) == poly_v3
+
+    assert result.all()
