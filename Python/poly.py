@@ -21,10 +21,12 @@ if __name__ == '__main__':
     assert result.all(), "Add not equal!"
 
     # 2. Multiplication (Hadamard product) of two vectors v1 and v2
-    y_vM = np.multiply(y_v1, y_v2)
-    print("Inner product of v1 & v2", y_vM)
+    y_vM = np.multiply(y_v1, y_v2)      # this returns a vector of 3 elements
+                                        # If you interpolate this vector to a polynomial,
+                                        # it will be a polynomial of degree 2
+    print("Inner (or Hadamard) product of v1 & v2", y_vM)
     # Homomorphic to multiplying two polynomials
-    poly_vM = poly_v1 * poly_v2
+    poly_vM = poly_v1 * poly_v2         # a polynomial of degree 4
     print("Product of two polynomials: ", poly_vM)
     print("Evaluate the poly product at 1, 2, 3 =", poly_vM(1), poly_vM(2),  poly_vM(3))
     result = y_vM == np.array([poly_vM(1), poly_vM(2),  poly_vM(3)]).astype(int)
