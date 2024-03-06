@@ -2,7 +2,7 @@ import numpy as np
 import galois
 import random
 
-# Define a finite field
+# Define a finite field Fp, where p is a prime number
 p = 1327        # Let's take a small prime number
 Fp = galois.GF(p)
 # 1. Prover --> prove the computation out <== x*y
