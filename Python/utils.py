@@ -1,23 +1,20 @@
 import secrets
 import math
 
-q = 1337    # A composite number
-n = 32
-
-def sample_Zq():
-    return secrets.randbelow(q)
+def sample_Zp(p):
+    return secrets.randbelow(p)
 
 def sample_bits(k):
     return secrets.randbits(k)
 
-def rejection_sampling_Zq():
+def rejection_sampling_Zp(k):
     while True:
-        e = sample_bits(n)
+        e = sample_bits(k)
         if e >=0 and e < q:
             return e
         
-def sample_Zqstar():
+def sample_Zqstar(p):
     while True:
-        e = sample_Zq()
-        if math.gcd(e, q) == 1:
+        e = sample_Zp(p)
+        if math.gcd(e, p) == 1:
             return e
