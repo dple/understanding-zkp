@@ -82,7 +82,9 @@ assert all(np.equal(np.matmul(L, witness) * np.matmul(R, witness), np.matmul(O, 
 
 
 def interpolate_column(col):
-        xs = Fp(np.array([1, 2, 3, 4, 5]))     # as the above matrices have 5 rows, or each column will have 5 elements
+        # As the above matrices have 5 rows, or each column will have 5 elements
+        xs = Fp(np.array([1, 2, 3, 4, 5]))
+        # Return a polynomial of degree 4
         return galois.lagrange_poly(xs, col)
 
 # Interpolate matrices to polynomials in GF(p)
@@ -90,7 +92,7 @@ U_polys = np.apply_along_axis(interpolate_column, 0, L)
 V_polys = np.apply_along_axis(interpolate_column, 0, R)
 W_polys = np.apply_along_axis(interpolate_column, 0, O)
 
-#print(U_polys)
+print(U_polys)
 
 """
 Computing h(x), where U(x)*V(x) = W(x) + t(x)*h(x)
@@ -98,10 +100,15 @@ t(x) = (x - 1)(x - 2)(x - 3)(x - 4)(x - 5) as there are 5 rows
 1. Computer inner (Hadamard) product of the polynomials and the witnesses
 2. 
 """
+def transform_matrix2poly(mat, witness):
+        # INterpolate the matrix mat to
+        polys = np.apply_along_axis(interpolate_column, 0, L)
+
+
 def inner_product_polynomials_with_witness(polys, witness):
-    mul_ = lambda x, y: x * y
-    sum_ = lambda x, y: x + y
-    return reduce(sum_, map(mul_, polys, witness))
+        mul_ = lambda x, y: x * y
+        sum_ = lambda x, y: x + y
+        return reduce(sum_, map(mul_, polys, witness))
 
 term_1 = inner_product_polynomials_with_witness(U_polys, witness)
 term_2 = inner_product_polynomials_with_witness(V_polys, witness)
