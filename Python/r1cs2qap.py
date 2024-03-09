@@ -94,21 +94,17 @@ if __name__ == '__main__':
         Computing h(x), where U(x)*V(x) = W(x) + t(x)*h(x)
         t(x) = (x - 1)(x - 2)(x - 3)(x - 4)(x - 5) as there are 5 rows
         1. Computer inner (Hadamard) product of the polynomials and the witnesses
-        2. Computer the h(x)
+        2. Computer the h(x) = (U(x)*V(x) - W(x)) / t(x) 
         """
-        L_poly = transform_matrix2poly(L, witness)
-        print(L_poly)
-        R_poly = transform_matrix2poly(R, witness)
-        print(R_poly)
-        O_poly = transform_matrix2poly(O, witness)
-        print(O_poly)
+        U_poly = transform_matrix2poly(L, witness)
+        V_poly = transform_matrix2poly(R, witness)
+        W_poly = transform_matrix2poly(O, witness)
         t_poly = galois.Poly.Roots([1, 2, 3, 4, 5], field=Fp)
-        print(t_poly)
-        LR_product = L_poly * R_poly
-        print(LR_product)
-        h_poly = (LR_product - O_poly) // t_poly
-        remainder = (LR_product - O_poly) % t_poly
-        print(h_poly)
-        print("Remainder = ", remainder)
+        LR_product = U_poly * V_poly
+        h_poly = (LR_product - W_poly) // t_poly
+        remainder = (LR_product - W_poly) % t_poly
+        # Check if the remainder is equal to zero
+        assert remainder == 0, "The remainder polynomial is not equal to 0!"
 
-        assert LR_product == O_poly + t_poly * h_poly, "Not equal!"
+        # Verifier check if two sides are balanced
+        assert LR_product == W_poly + t_poly * h_poly, "Not equal!"
