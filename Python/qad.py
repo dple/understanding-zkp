@@ -1,5 +1,5 @@
 """
-This python code consolidated and slightly modified the example shown by Rareskill
+This python code consolidated and slightly modified the example shown by Rareskills
                 Quadratic Arithmetic Programs
 https://www.rareskills.io/post/quadratic-arithmetic-program
 
