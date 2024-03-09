@@ -1,7 +1,11 @@
+"""
+This Python code demonstrate the content discussed in the following article by Rareskills:
+R1CS to Quadratic Arithmetic Program over a Finite Field in Python
+(https://www.rareskills.io/post/r1cs-to-qap)
+"""
 import galois
 import numpy as np
 from utils import *
-from functools import reduce
 
 # Define a finite field Fp, where p is a prime number
 p = 7919        # Let's take a small prime number
