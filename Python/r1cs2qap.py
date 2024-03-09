@@ -47,69 +47,68 @@ O = |  0  0  0  0  0  1  0  0  |
     |  0  0  0  0  0  0  0  1  |
     |-11  1  0 21  0  0 -1  1  |         -> constant -11 is under the term 1  
     
-In a finite field Fp, -1 = p - 1, and -11 = p - 11 as p - 1 = -1 mod p and p - 11 = -11 mod p
+Note: In a finite field Fp, -1 = p - 1, and -11 = p - 11 as p - 1 = -1 mod p and p - 11 = -11 mod p
 """
 
-O = Fp([[0, 0, 0, 0, 1, 0, 0, 0],
-        [0, 0, 0, 0, 0, 1, 0, 0],
-        [0, 0, 0, 0, 0, 0, 1, 0],
-        [0, 0, 0, 0, 0, 0, 0, 1],
-        [Fp(p - 11), 1, 0, 21, 0, 0, Fp(p - 1), 1]])
-
-L = Fp([[0, 0, 1, 0, 0, 0, 0, 0],
-        [0, 0, 0, 1, 0, 0, 0, 0],
-        [0, 0, 3, 0, 0, 0, 0, 0],
-        [0, 0, 0, 0, 5, 0, 0, 0],
-        [0, 0, 7, 0, 0, 0, 0, 0]])
-R = Fp([[0, 0, 1, 0, 0, 0, 0, 0],
-        [0, 0, 0, 1, 0, 0, 0, 0],
-        [0, 0, 0, 0, 1, 0, 0, 0],
-        [0, 0, 0, 0, 0, 1, 0, 0],
-        [0, 0, 0, 0, 0, 1, 0, 0]])
-
-# Compute the witness
-x = Fp(sample_Zp(p))
-y = Fp(sample_Zp(p))
-v1 = x*x
-v2 = y*y
-v3 = 3*x*v1
-v4 = 5*v1*v2
-out = v3 - v4 - 21*y + 7*x*v2 + Fp(11)
-
-witness = Fp([1, out, x, y, v1, v2, v3, v4])  # Cw = Aw*Bw
-
-assert all(np.equal(np.matmul(L, witness) * np.matmul(R, witness), np.matmul(O, witness))), "not equal"
-
-
-def interpolate_column(col):
-        # As the above matrices have 5 rows, or each column will have 5 elements
+def transform_matrix2poly(mat, wit):
+        # Interpolate the matrix mat to a polynomial
         xs = Fp(np.array([1, 2, 3, 4, 5]))
-        # Return a polynomial of degree 4
-        return galois.lagrange_poly(xs, col)
+        sum = galois.Poly([0, 0, 0, 0, 0], field=Fp)
+        for i in range(len(wit)):
+                poly = galois.lagrange_poly(xs, mat[:,i])
+                sum += poly*wit[i]
+        return sum
 
-# Interpolate matrices to polynomials in GF(p)
-U_polys = np.apply_along_axis(interpolate_column, 0, L)
-V_polys = np.apply_along_axis(interpolate_column, 0, R)
-W_polys = np.apply_along_axis(interpolate_column, 0, O)
+if __name__ == '__main__':
+        O = Fp([[0, 0, 0, 0, 1, 0, 0, 0],
+                [0, 0, 0, 0, 0, 1, 0, 0],
+                [0, 0, 0, 0, 0, 0, 1, 0],
+                [0, 0, 0, 0, 0, 0, 0, 1],
+                [Fp(p - 11), 1, 0, 21, 0, 0, Fp(p - 1), 1]])
 
-print(U_polys)
+        L = Fp([[0, 0, 1, 0, 0, 0, 0, 0],
+                [0, 0, 0, 1, 0, 0, 0, 0],
+                [0, 0, 3, 0, 0, 0, 0, 0],
+                [0, 0, 0, 0, 5, 0, 0, 0],
+                [0, 0, 7, 0, 0, 0, 0, 0]])
+        R = Fp([[0, 0, 1, 0, 0, 0, 0, 0],
+                [0, 0, 0, 1, 0, 0, 0, 0],
+                [0, 0, 0, 0, 1, 0, 0, 0],
+                [0, 0, 0, 0, 0, 1, 0, 0],
+                [0, 0, 0, 0, 0, 1, 0, 0]])
 
-"""
-Computing h(x), where U(x)*V(x) = W(x) + t(x)*h(x)
-t(x) = (x - 1)(x - 2)(x - 3)(x - 4)(x - 5) as there are 5 rows
-1. Computer inner (Hadamard) product of the polynomials and the witnesses
-2. 
-"""
-def transform_matrix2poly(mat, witness):
-        # INterpolate the matrix mat to
-        polys = np.apply_along_axis(interpolate_column, 0, L)
+        # Compute the witness
+        x = Fp(sample_Zp(p))
+        y = Fp(sample_Zp(p))
+        v1 = x * x
+        v2 = y * y
+        v3 = 3 * x * v1
+        v4 = 5 * v1 * v2
+        out = v3 - v4 - 21 * y + 7 * x * v2 + Fp(11)
 
+        witness = Fp([1, out, x, y, v1, v2, v3, v4])  # Cw = Aw*Bw
 
-def inner_product_polynomials_with_witness(polys, witness):
-        mul_ = lambda x, y: x * y
-        sum_ = lambda x, y: x + y
-        return reduce(sum_, map(mul_, polys, witness))
+        assert all(np.equal(np.matmul(L, witness) * np.matmul(R, witness), np.matmul(O, witness))), "not equal"
 
-term_1 = inner_product_polynomials_with_witness(U_polys, witness)
-term_2 = inner_product_polynomials_with_witness(V_polys, witness)
-term_3 = inner_product_polynomials_with_witness(W_polys, witness)
+        """
+        Computing h(x), where U(x)*V(x) = W(x) + t(x)*h(x)
+        t(x) = (x - 1)(x - 2)(x - 3)(x - 4)(x - 5) as there are 5 rows
+        1. Computer inner (Hadamard) product of the polynomials and the witnesses
+        2. Computer the h(x)
+        """
+        L_poly = transform_matrix2poly(L, witness)
+        print(L_poly)
+        R_poly = transform_matrix2poly(R, witness)
+        print(R_poly)
+        O_poly = transform_matrix2poly(O, witness)
+        print(O_poly)
+        t_poly = galois.Poly.Roots([1, 2, 3, 4, 5], field=Fp)
+        print(t_poly)
+        LR_product = L_poly * R_poly
+        print(LR_product)
+        h_poly = (LR_product - O_poly) // t_poly
+        remainder = (LR_product - O_poly) % t_poly
+        print(h_poly)
+        print("Remainder = ", remainder)
+
+        assert LR_product == O_poly + t_poly * h_poly, "Not equal!"
