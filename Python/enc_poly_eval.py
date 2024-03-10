@@ -30,7 +30,7 @@ from functools import reduce
 from utils import *
 
 print("initializing a large field, this may take a while...")
-GF = galois.GF(curve_order)
+Fp = galois.GF(curve_order)
 
 def generate_powers_of_tau(tau, degree):
     return [multiply(G1, int(tau ** i)) for i in range(degree + 1)]
@@ -39,10 +39,10 @@ def inner_product(ec_points, coeffs):
     return reduce(add, (multiply(point, int(coeff)) for point, coeff in zip(ec_points, coeffs)), Z1)
 
 # p = (x - 4) * (x + 2)
-p = galois.Poly.Roots([4, -2], field=GF)
+p = galois.Poly.Roots([4, -2], field=Fp)
 
 # evaluate at 8
-tau = GF(8) #GF(sample_Zp(curve_order))
+tau = Fp(8) #GF(sample_Zp(curve_order))
 
 # evaluate then convert
 powers_of_tau = generate_powers_of_tau(tau, p.degree)
