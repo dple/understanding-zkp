@@ -27,3 +27,5 @@ Circom and Halo2 are probably the most popular ZK languages. Their documentation
 - [The Halo2 book](https://zcash.github.io/halo2), by ZCash
 - [0xPARC](https://learn.0xparc.org/): a fruitful resources introducing the use of Circom and halo2.
 
+
+Personally, I found that the Rareskills book is great source. It explained and demonstrated by Python step-by-step how to a practical Zero-Knowledge Proof system work.  
