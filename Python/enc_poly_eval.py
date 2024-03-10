@@ -38,18 +38,24 @@ def generate_powers_of_tau(tau, degree):
 def inner_product(ec_points, coeffs):
     return reduce(add, (multiply(point, int(coeff)) for point, coeff in zip(ec_points, coeffs)), Z1)
 
-# p = (x - 4) * (x + 2)
-p = galois.Poly.Roots([4, -2], field=Fp)
+if __name__ == '__main__':
 
-# evaluate at 8
-tau = Fp(8) #GF(sample_Zp(curve_order))
+    # Define a polynomial to be evaluated, p = (x - 4) * (x + 2)
+    p = galois.Poly.Roots([4, -2], field=Fp)
 
-# evaluate then convert
-powers_of_tau = generate_powers_of_tau(tau, p.degree)
-evaluate_then_convert_to_ec = multiply(G1, int(p(tau)))
+    # Get a random value tau
+    tau = Fp(sample_Zp(curve_order))
 
-# evaluate via encrypted evaluation# coefficients need to be reversed to match the powers
-evaluate_on_ec = inner_product(powers_of_tau, p.coeffs[::-1])
+    # Evaluate p(x) at tau then convert the the point of elliptic curve p(tau)*G
+    evaluate_then_convert_to_ec = multiply(G1, int(p(tau)))
 
-if eq(evaluate_then_convert_to_ec, evaluate_on_ec):
-    print("elliptic curve points are equal")
+    # Trusted setup phase, calculating ([tau^0*G], [tau^1*G], [tau^2*G], ..., [tau^d*G])
+    powers_of_tau = generate_powers_of_tau(tau, p.degree)
+
+    # Evaluate via encrypted evaluation# coefficients need to be reversed to match the powers,
+    # that is, compute a_0 * G + [a_1 * t] * G + [a_2 * t^2] * G + ... + [a_d * t^d] * G
+    evaluate_on_ec = inner_product(powers_of_tau, p.coeffs[::-1])
+
+    # Assert the equality of two above calculations
+    if eq(evaluate_then_convert_to_ec, evaluate_on_ec):
+        print("elliptic curve points are equal")
