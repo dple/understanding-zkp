@@ -123,7 +123,6 @@ if __name__ == '__main__':
         #print("Degree of polynomial = ", U_poly.degree)
         t_poly = galois.Poly.Roots([1, 2, 3, 4, 5], field=Fp)
         LR_product = U_poly * V_poly
-        print(LR_product)
         h_poly = (LR_product - W_poly) // t_poly
         #print("h(x) = ", h_poly)
         remainder = (LR_product - W_poly) % t_poly
