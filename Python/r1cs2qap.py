@@ -8,6 +8,7 @@ Proving x, y are solutions of out = 3xˆ3 - 5xˆ2yˆ2 + 7xyˆ2 - 21y + 11
 The task is to evaluate:
 1. Convert out <== 3xˆ3 - 5xˆ2yˆ2 + 7xyˆ2 - 21y + 11 to r1cs constraints
 2. Convert r1cs constraints to Quadratic Arithmetic Program
+3. Verify the equality of polynomials
 
 - Constraints
 
