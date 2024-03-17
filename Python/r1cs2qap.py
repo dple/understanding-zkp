@@ -7,10 +7,15 @@ Proving x, y are solutions of out = 3xˆ3 - 5xˆ2yˆ2 + 7xyˆ2 - 21y + 11
 
 The task is to evaluate:
 1. Convert out <== 3xˆ3 - 5xˆ2yˆ2 + 7xyˆ2 - 21y + 11 to r1cs constraints
-2. Convert r1cs constraints to Quadratic Arithmetic Program
+        --> Results are three matrices L, R, and O
+2. Transform the r1cs constraints to Quadratic Arithmetic Program
+        --> move from vector space (including L, R, O and witness vector) to polynomial space
+        --> Results are 5 polynomials: U(x), V(x), W(x), t(x) and h(x)
 3. Verify the equality of polynomials
+        --> U(x)*V(x) = W(x) + t(x)*h(x)
 
-- Constraints
+
+Step 1: Get constraints
 
 v1 = xx
 v2 = yy
@@ -20,10 +25,9 @@ out - 11 - v3 + v4 + 21y = 7xv2    -> as addition is 'free', we move them to the
 
 witness = [1, out, x, y, v1, v2, v3, v4]
 
-- From the above constraints, define the matrices for constraints
+Step 2: From the above constraints, define the matrices for constraints
 
 L: Construct matrix L from left hand terms of constraints
-
     | 1 out x  y  v1 v2 v3 v4 |
     | 0  0  1  0  0  0  0  0  |         -> left_hand_side x in v1 = xx
 L = | 0  0  0  1  0  0  0  0  |         -> left_hand_side y in v2 = yy
@@ -32,7 +36,6 @@ L = | 0  0  0  1  0  0  0  0  |         -> left_hand_side y in v2 = yy
     | 0  0  7  0  0  0  0  0  |         -> left_hand_side 7x in out - v3 + v4 + 10y = 7xv2
 
 R: the matrix represents right hand side variables in constraints
-
     | 1 out x  y  v1 v2 v3 v4 |
     | 0  0  1  0  0  0  0  0  |
 R = | 0  0  0  1  0  0  0  0  |
@@ -41,7 +44,6 @@ R = | 0  0  0  1  0  0  0  0  |
     | 0  0  0  0  0  1  0  0  |
 
 O: the matrix represents output variables in constraints
-
     |  1 out x  y  v1 v2 v3 v4 |
     |  0  0  0  0  1  0  0  0  |
 O = |  0  0  0  0  0  1  0  0  |
@@ -78,6 +80,7 @@ def transform_matrix2poly(mat, wit):
         return sum
 
 if __name__ == '__main__':
+        # Define matrices from constraints
         O = Fp([[0, 0, 0, 0, 1, 0, 0, 0],
                 [0, 0, 0, 0, 0, 1, 0, 0],
                 [0, 0, 0, 0, 0, 0, 1, 0],
@@ -104,7 +107,7 @@ if __name__ == '__main__':
         v4 = 5 * v1 * v2
         out = v3 - v4 - 21 * y + 7 * x * v2 + Fp(11)
 
-        witness = Fp([1, out, x, y, v1, v2, v3, v4])  # W*witness = (U*witness) * (V*witness)
+        witness = Fp([1, out, x, y, v1, v2, v3, v4])  # O*witness = (L*witness) * (R*witness)
 
         # Check if (L*witness)*(R*witness) = (O*witness)
         #print(np.matmul(L, witness) * np.matmul(R, witness))
