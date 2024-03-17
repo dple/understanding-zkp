@@ -44,7 +44,7 @@ def inner_product(ec_points, coeffs):
 
 if __name__ == '__main__':
 
-    # Define a polynomial to be evaluated, p = (x - 4) * (x + 2)
+    # The factored form of a polynomial to be evaluated, p = (x - 4) * (x + 2)
     p = galois.Poly.Roots([4, -2], field=Fp)
 
     # Get a random value tau
