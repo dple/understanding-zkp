@@ -21,15 +21,19 @@ And, evaluating a polynomial will be converted as:
 
 p(t) * G = a_0 * G + [a_1 * t] * G + [a_2 * t^2] * G + ... + [a_d * t^d] * G
 
-Calculating scalar multiplication is quite expensive, especially when the degree of polynomial p(x), d, is getting big.
-Moreover, the proof is not succinct as its size is linear to d. That's why we need cryptographic pairings
+Calculating scalar multiplication is quite expensive, especially when the degree of
+polynomial p(x), d, is getting big. Moreover, the proof is not succinct as its size
+is linear to d. That's why we need cryptographic pairings e: G1 x G2 -> G12 that won't
+be implemented in this file.
 """
+
+
 from py_ecc.bn128 import G1, multiply, add, eq, curve_order, Z1
 import galois
 from functools import reduce
-from utils import *
+from utils import sample_Zp
 
-print("initializing a large field, this may take a while...")
+print("Initializing a large field, this may take a while...")
 Fp = galois.GF(curve_order)
 
 def generate_powers_of_tau(tau, degree):
@@ -46,16 +50,20 @@ if __name__ == '__main__':
     # Get a random value tau
     tau = Fp(sample_Zp(curve_order))
 
-    # Evaluate p(x) at tau then convert the the point of elliptic curve p(tau)*G
+    # Evaluate p(x) at tau then convert to the point of elliptic curve p(tau)*G
     evaluate_then_convert_to_ec = multiply(G1, int(p(tau)))
 
     # Trusted setup phase, calculating ([tau^0*G], [tau^1*G], [tau^2*G], ..., [tau^d*G])
     powers_of_tau = generate_powers_of_tau(tau, p.degree)
 
-    # Evaluate via encrypted evaluation# coefficients need to be reversed to match the powers,
-    # that is, compute a_0 * G + [a_1 * t] * G + [a_2 * t^2] * G + ... + [a_d * t^d] * G
+    # Evaluate via encrypted evaluation coefficients need to be reversed to match the powers,
+    # that is, compute a_0 * G + a_1 * [tau * G] + a_2 * [tau^2 * G] + ... + a_d * [tau^d * G]
     evaluate_on_ec = inner_product(powers_of_tau, p.coeffs[::-1])
 
-    # Assert the equality of two above calculations
-    if eq(evaluate_then_convert_to_ec, evaluate_on_ec):
-        print("elliptic curve points are equal")
+    """
+    Assert the equality of two above calculations
+        a_0 * G + a_1 * [tau * G] + a_2 * [tau^2 * G] + ... + a_d * [tau^d * G]
+        = a_0 * G + (a_1 * tau) * G + (a_2 * tau^2) * G] + ... + (a_d * tau^d) * G
+        = p(tau) * G
+    """
+    assert eq(evaluate_then_convert_to_ec, evaluate_on_ec), "Asserting encrypted polynomial evaluation failed"
