@@ -47,13 +47,13 @@ if __name__ == '__main__':
     # The factored form of a polynomial to be evaluated, p = (x - 4) * (x + 2)
     p = galois.Poly.Roots([4, -2], field=Fp)
 
-    # Get a random value tau
-    tau = Fp(sample_Zp(curve_order))
-
     # Evaluate p(x) at tau then convert to the point of elliptic curve p(tau)*G
     evaluate_then_convert_to_ec = multiply(G1, int(p(tau)))
 
-    # Trusted setup phase, calculating ([tau^0*G], [tau^1*G], [tau^2*G], ..., [tau^d*G])
+    # Trusted setup phase,
+    # 1. Get a random value tau
+    tau = Fp(sample_Zp(curve_order))
+    # 2. Calculate ([tau^0*G], [tau^1*G], [tau^2*G], ..., [tau^d*G])
     powers_of_tau = generate_powers_of_tau(tau, p.degree)
 
     # Evaluate via encrypted evaluation coefficients need to be reversed to match the powers,
