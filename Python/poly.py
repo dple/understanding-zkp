@@ -24,7 +24,7 @@ if __name__ == '__main__':
     y_vM = np.multiply(y_v1, y_v2)      # this returns a vector of 3 elements
                                         # If you interpolate this vector to a polynomial,
                                         # it will be a polynomial of degree 2
-    print("Inner (or Hadamard) product of v1 & v2", y_vM)
+    print("Element-wise (or Hadamard) product of v1 & v2", y_vM)
     # Homomorphic to multiplying two polynomials
     poly_vM = poly_v1 * poly_v2         # a polynomial of degree 4
     print("Product of two polynomials: ", poly_vM)
