@@ -47,10 +47,7 @@ if __name__ == '__main__':
     # The factored form of a polynomial to be evaluated, p = (x - 4) * (x + 2)
     p = galois.Poly.Roots([4, -2], field=Fp)
 
-    # Evaluate p(x) at tau then convert to the point of elliptic curve p(tau)*G
-    evaluate_then_convert_to_ec = multiply(G1, int(p(tau)))
-
-    # Trusted setup phase,
+        # Trusted setup phase,
     # 1. Get a random value tau
     tau = Fp(sample_Zp(curve_order))
     # 2. Calculate ([tau^0*G], [tau^1*G], [tau^2*G], ..., [tau^d*G])
@@ -59,6 +56,9 @@ if __name__ == '__main__':
     # Evaluate via encrypted evaluation coefficients need to be reversed to match the powers,
     # that is, compute a_0 * G + a_1 * [tau * G] + a_2 * [tau^2 * G] + ... + a_d * [tau^d * G]
     evaluate_on_ec = inner_product(powers_of_tau, p.coeffs[::-1])
+
+    # Evaluate p(x) at tau then convert to the point of elliptic curve p(tau)*G
+    evaluate_then_convert_to_ec = multiply(G1, int(p(tau)))
 
     """
     Assert the equality of two above calculations
