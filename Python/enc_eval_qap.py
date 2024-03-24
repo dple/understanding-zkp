@@ -125,7 +125,11 @@ if __name__ == '__main__':
     assert remainder == 0, "The remainder polynomial is not equal to zero!"
 
     """
-        Trusted setup phase, calculating ([tau^0*G], [tau^1*G], [tau^2*G], ..., [tau^d*G])
+        Trusted setup phase, calculating ([tau^0*G], [tau^1*G], [tau^2*G], ..., [tau^d*G]), 
+        where G could be G1 or G2. Recall that G1 is the group of points defined on the base field Fp,
+        and G2 is the group of points defined on the extension field (i.e, Fpˆ12 in the BN curves), 
+        thus calculations on G1 are much cheaper than ones on G2. 
+        
     """
     # 1. Get a random value tau
     tau = Fp(sample_Zp(p))
@@ -137,7 +141,9 @@ if __name__ == '__main__':
     powers_of_tau_G1 = generate_powers_of_tau(tau, d, G1)
     # Calculate tau*G2, tauˆ2*G2, ..., tauˆd*G2
     powers_of_tau_G2 = generate_powers_of_tau(tau, d, G2)
+
     # Calculate tau*t(tau)*G1, tauˆ2*t(tau)*G1, ..., tauˆd*t(tau)*G1. Required to evaluate h(x)
+    # For this per circuit trusted setup, prover must send the polynomial t(x) to the trusted server
     t_tau_G1 = multiply(G1, int(t_poly(tau)))
     powers_of_t_tau_G1 = generate_powers_of_tau(tau, d - 1, t_tau_G1)
 
@@ -152,7 +158,12 @@ if __name__ == '__main__':
     
     Verifier will check that relation by checking if:
             pairing(U(tau)*G1, V(tau)*G2) = pairing(C*G1, G2), 
-    where C = W(tau) + t(tau)*h(tau)
+    where C*G1 = (W(tau) + t(tau)*h(tau))*G1, and
+    - U(tau)*G1 = sum(u_i*[tauˆi*G1]), where u_i are coefficients of U(x)
+    - V(tau)*G2 = sum(v_i*[tauˆi*G2]), where v_i are coefficients of V(x)
+    - W(tau)*G1 = sum(w_i*[tauˆi*G2]), where w_i are coefficients of W(x)
+    - t(tau)*h(tau)*G1 = sum(h_i*[tauˆî*t(tau)*G1]), where h_i are coefficients of h(x) 
+        and tauî*t(tau)*G1 are precomputed in the 2nd phase of the trusted setup. 
     """
 
     # Given powers of tau from the trusted setup phase, compute U(tau)*G1, V(tau)*G2, and C*G1
@@ -162,6 +173,15 @@ if __name__ == '__main__':
     evaluate_ht_on_G1 = inner_product(powers_of_t_tau_G1, h_poly.coeffs[::-1])
     Wht_G1 = add(evaluate_W_on_G1, evaluate_ht_on_G1)
 
-    # Verifying
+    """
+    Verifying. Prover sends (or publishes) three point elements to the veririfer, including:
+    - evaluate_V_on_G2 = U(tau)*G1
+    - evaluate_I_on_G1 = V(tau)*G2
+    - Wht_G1 = (W(tau) + t(tau)*h(tau))*G1
+    The verifier will be required to compute two cryptographic pairings, then compare their results. 
+    - Accept the proof if the two pairings returns the same result
+    - Otherwise, reject the proof
+    """
+
     print("Proof Verification ...")
     assert pairing(evaluate_V_on_G2, evaluate_U_on_G1) == pairing(G2, Wht_G1),"Failed to check pairings"
