@@ -41,13 +41,18 @@ def generate_powers_of_tau_W(tau, d, m, point, L_mat, R_mat, O_mat, alpha, beta)
     list_taus = []
     # require degree + 1 points to interpolate a polynomial of degree d
     xs = Fp(np.array([i + 1 for i in range(d + 1)]))
+    # Each col of matrices L, R, and W will be converted to a polynomial
     for i in range(m):
-        poly_U = galois.lagrange_poly(xs, L_mat[:, i])
-        beta_U = poly_U*beta
-        poly_V = galois.lagrange_poly(xs, R_mat[:, i])
-        alpha_V = poly_V * alpha
-        poly_W = galois.lagrange_poly(xs, O_mat[:, i])
-        sum_tau = beta_U(tau) + alpha_V(tau) + poly_W(tau)
+        # U_i(x) = interpolate the i-th column of matrix L
+        poly_Ui = galois.lagrange_poly(xs, L_mat[:, i])
+        beta_Ui = poly_Ui * beta        # multiply U with beta
+        # V_i(x) = interpolate the i-th column of matrix R
+        poly_Vi = galois.lagrange_poly(xs, R_mat[:, i])
+        alpha_Vi = poly_Vi * alpha
+        # W_i(x) = interpolate the i-th column of matrix W
+        poly_Wi = galois.lagrange_poly(xs, O_mat[:, i])
+        # Get beta*U_i(tau) + alpha*V_i(tau) + W_i(tau)
+        sum_tau = beta_Ui(tau) + alpha_Vi(tau) + poly_Wi(tau)
         list_taus.append(multiply(point, int(sum_tau)))
 
     return list_taus
