@@ -170,18 +170,10 @@ if __name__ == '__main__':
         """
     """
     beta_U_tau_G1 = multiply(G1, int(beta*U_poly(tau)))
-            # beta_U_poly = U_poly * beta  # beta*U(x)
-            # evaluate_beta_U_on_G1 = inner_product(powers_of_tau_G1, beta_U_poly.coeffs[::-1])
     alpha_V_tau_G1 = multiply(G1, int(alpha*V_poly(tau)))
-            # alpha_V_poly = V_poly * alpha  # alpha*V(x)
-            # evaluate_alpha_V_on_G1 = inner_product(powers_of_tau_G1, alpha_V_poly.coeffs[::-1])
-
     W_tau_G1 = multiply(G1, int(W_poly(tau)))
-            # evaluate_W_on_G1 = inner_product(powers_of_tau_G1, W_poly.coeffs[::-1])
     pt_tmp = add(beta_U_tau_G1, alpha_V_tau_G1)
     W_beta_U_alpha_V_G1 = add(pt_tmp, W_tau_G1)
-            # W_beta_U_G1 = add(evaluate_W_on_G1, evaluate_beta_U_on_G1)
-            # W_beta_U_alpha_V_G1 = add(W_beta_U_G1, evaluate_alpha_V_on_G1)
     """
 
     """
