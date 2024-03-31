@@ -53,10 +53,6 @@ import galois
 import numpy as np
 from utils import sample_Zp
 
-print("Initializing a large field, this may take a while...")
-p = curve_order
-Fp = galois.GF(p)
-
 def generate_powers_of_tau(tau, degree, point):
     return [multiply(point, int(tau ** i)) for i in range(degree + 1)]
 
@@ -77,6 +73,11 @@ def transform_matrix2poly(mat, wit):
 
 
 if __name__ == '__main__':
+    print("Initializing a large field, this may take a while...")
+    p = curve_order
+    Fp = galois.GF(p)
+
+    print("Initialization completed. Starting computation ...")
 
     # Create matrices from constraints
     O = Fp([[0, 0, 0, 0, 1, 0, 0, 0],
