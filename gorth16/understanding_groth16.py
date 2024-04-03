@@ -30,18 +30,22 @@ def generate_powers_of_tau(tau, degree, point):
 
 
 """
-Generate powers of tau used to compute C = beta*U + alpha*V + W
+Given three matrices L, R and O, generate powers of tau for public and private input, 
+i,e., C = beta*U + alpha*V + W
     @:param d: degree of the polynomials formed from columns in the matrices, d = n - 1, where n = #rows
     @:param m: #columns of the matrices = len(witness)
 
-    @:return m elliptic curve points corresponding to m elements of the witness, or #columns of matrices L, R, or O 
+    @:return two list of powers of tau (elliptic curve points):
+     - one related to public inputs (i.e., first l values in the witness vector) will be for verifier
+     - one related to private inputs (i.e, last m - l values in the witness vector) will be for prover
 """
-def generate_powers_of_tau_for_inputs(tau, d, m, point, L_mat, R_mat, O_mat, alpha, beta, inv):
-    taus_for_C = []
+def generate_powers_of_tau_for_inputs(tau, d, m, point, L_mat, R_mat, O_mat, alpha, beta, ell, gamma_inv, delta_inv):
+    taus_for_public_inputs = []
+    taus_for_private_inputs = []
     # require degree + 1 points to interpolate a polynomial of degree d
     xs = Fp(np.array([i + 1 for i in range(d + 1)]))
     # Each i-th col of matrices L, R, and W will be converted to a polynomial U_i(x), V_i(x) and W_i(x)
-    for i in range(ell):
+    for i in range(m):
         # U_i(x) = interpolate the i-th column of matrix L
         poly_Ui = galois.lagrange_poly(xs, L_mat[:, i])
         # Perform a random shift by multiplying the poly with a random factor beta
@@ -55,10 +59,13 @@ def generate_powers_of_tau_for_inputs(tau, d, m, point, L_mat, R_mat, O_mat, alp
         # Evaluate the above polynomial at tau, then get the sum
         #       = beta*U_i(tau) + alpha*V_i(tau) + W_i(tau)
         sum_tau = beta_Ui(tau) + alpha_Vi(tau) + poly_Wi(tau)
-        # Multiply the sum with the elliptic cuve point, then append it to the returned list
-        taus_for_C.append(multiply(point, int(sum_tau)))
 
-    return taus_for_C
+        # Multiply the sum with the elliptic curve point, then append it to the returned list
+        if i < ell:
+            taus_for_public_inputs.append(multiply(point, int(sum_tau*gamma_inv)))
+        else:
+            taus_for_private_inputs.append(multiply(point, int(sum_tau*delta_inv)))
+    return taus_for_public_inputs, taus_for_private_inputs
 
 def transform_matrix2poly(mat, wit, d):
     # Interpolate the matrix mat to a polynomial
@@ -144,16 +151,26 @@ if __name__ == '__main__':
 
     # Introduce gamma and delta to prevent a malicious prover from inventing the proof
     gamma = sample_Zp(p)
+    gamma_G2 = multiply(G2, int(gamma))  # gamma*G2
     gamma_inv = Fp(1)/Fp(gamma)
     delta = sample_Zp(p)
+    delta_G2 = multiply(G2, int(delta))  # delta*G2
     delta_inv = Fp(1)/Fp(delta)
-    ell = 2         # number of public inputs. This value can be changed depending on circuits
+    ell = 2         # number of public inputs. In this example, public inputs are 1 and out
     # Calculate alpha*V(tau) + beta*U(tau) + W(au)
-    powers_of_tau_for_C = generate_powers_of_tau_for_inputs(tau, d, m, G1, L, R, O, alpha, beta, ell, gamma_inv, delta_inv)
+    powers_of_tau_for_public_inputs, powers_of_tau_for_private_inputs = \
+        generate_powers_of_tau_for_inputs(tau, d, m, G1, L, R, O, alpha, beta, ell, gamma_inv, delta_inv)
+    """
     # Calculate powers of tau for evaluating h(x)t(x) at tau
-    #      tau*t(tau)*G1, tauˆ2*t(tau)*G1, ..., tauˆd*t(tau)*G1
+    #      tau*t(tau)*G1, tauˆ2*t(tau)*G1, ..., tauˆ{d - 1}*t(tau)*G1
     t_tau_G1 = multiply(G1, int(t_poly(tau)))
     powers_of_tau_for_ht = generate_powers_of_tau(tau, d - 1, t_tau_G1)
+    """
+
+    # Calculate powers of tau for evaluating (h(x)t(x))/delta at tau
+    #      tau*t(tau)*G1, tauˆ2*t(tau)*G1, ..., tauˆ{d - 1}*t(tau)*G1
+    t_tau_delta_G1 = multiply(G1, int(t_poly(tau) / delta))
+    powers_of_tau_for_ht = generate_powers_of_tau(tau, d - 1, t_tau_delta_G1)
 
     """
     Prover: compute
@@ -177,14 +194,14 @@ if __name__ == '__main__':
         Introducing alpha and beta to prevent a malicious prover to make up values U(tau)*G1, V(tau)*G2 and C
         U'(x) = alpha + U(x), V'(x) = beta + V(x)
     """
-    alpha_A = add(alpha_G1, A)        # [alpha + U(tau)]*G1
-    beta_B = add(beta_G2, B)          # [beta + V(tau)]*G2
+    alpha_A = add(alpha_G1, A)        # random shilf for A, [alpha + U(tau)]*G1
+    beta_B = add(beta_G2, B)          # random shilf for B, [beta + V(tau)]*G2
     evaluate_ht_on_G1 = inner_product(powers_of_tau_for_ht, h_poly.coeffs[::-1])
 
     """
         Compute C = (W(x) + beta*U(x) + alpha*V(x))*w + h(x)t(x)
     """
-    W_beta_U_alpha_V_G1 = inner_product(powers_of_tau_for_C, witness)
+    W_beta_U_alpha_V_G1 = inner_product(powers_of_tau_for_public_inputs, witness)
     C = add(W_beta_U_alpha_V_G1, evaluate_ht_on_G1)
 
     """
