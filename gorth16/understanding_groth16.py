@@ -215,7 +215,7 @@ if __name__ == '__main__':
 
     print("Proof Verification ...")
     if pairing(beta_B2, alpha_A) == pairing(beta_G2, alpha_G1) * pairing(G2, C):
-        print("Pass test #1")
+        print("Pass test #1, proof is correct after introducing alpha and beta!")
     else:
         print("Failed test #1")
         exit(1)
@@ -231,7 +231,7 @@ if __name__ == '__main__':
     C_private = add(C_private_taus, evaluate_ht_on_G1)
     # Check #2
     if pairing(beta_B2, alpha_A) == pairing(beta_G2, alpha_G1) * pairing(G2, C_private) * pairing(G2, C_public):
-        print("Pass test #2")
+        print("Pass test #2, proof is correct after separating public and private inputs!")
     else:
         print("Failed test #2")
         exit(1)
@@ -263,7 +263,7 @@ if __name__ == '__main__':
     # Check #3
     if pairing(beta_B2, alpha_A) == pairing(beta_G2, alpha_G1) * \
             pairing(delta_G2, C_private) * pairing(gamma_G2, C_public):
-        print("Pass test #3")
+        print("Pass test #3, proof is correct after introducing gamma and delta to prevent forgeries with public inputs!")
     else:
         print("Failed test #3")
         exit(1)
@@ -311,7 +311,7 @@ if __name__ == '__main__':
     # Final check
     if pairing(B2, A) == pairing(beta_G2, alpha_G1) * \
             pairing(delta_G2, C) * pairing(gamma_G2, C_public):
-        print("Pass final test")
+        print("Pass final test after adding two random values (r, s) to ensure the zero-knowledge!")
     else:
         print("Failed final test")
         exit(1)
