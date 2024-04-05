@@ -4,6 +4,19 @@ This code demonstrates groth16 algorithm. Explanation of the algorithm is on thi
 
 Let's reuse some code implemented in the file enc_eval_qap.py.
 You can get more explanation on why these calculations on the above source file.
+
+The task is to evaluate out <== 3xˆ3 - 5xˆ2yˆ2 + 7xyˆ2 - 21y + 11
+
+- Constraints
+
+v1 = xx
+v2 = yy
+v3 = 3xv1
+v4 = 5v1v2
+out - 11 - v3 + v4 + 21y = 7xv2    -> as addition is 'free', we move them to the output side
+
+witness = [1, out, x, y, v1, v2, v3, v4]
+
 """
 
 from py_ecc.bn128 import G1, G2, multiply, add, neg, pairing, curve_order, Z1
