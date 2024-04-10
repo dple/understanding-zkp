@@ -41,29 +41,6 @@ Generate powers of tau used to evaluate polynomials U(x), V(x), W(x) and h(x)
 def generate_powers_of_tau(tau, degree, point):
     return [multiply(point, int(tau ** i)) for i in range(degree + 1)]
 
-def generate_powers_of_tau_for_C(tau, d, m, point, L_mat, R_mat, O_mat, alpha, beta):
-    taus_for_C = []
-    # require degree + 1 points to interpolate a polynomial of degree d
-    xs = Fp(np.array([i + 1 for i in range(d + 1)]))
-    # Each i-th col of matrices L, R, and W will be converted to a polynomial U_i(x), V_i(x) and W_i(x)
-    for i in range(m):
-        # U_i(x) = interpolate the i-th column of matrix L
-        poly_Ui = galois.lagrange_poly(xs, L_mat[:, i])
-        # Perform a random shift by multiplying the poly with a random factor beta
-        beta_Ui = poly_Ui * beta        # multiply U with beta
-        # V_i(x) = interpolate the i-th column of matrix R
-        poly_Vi = galois.lagrange_poly(xs, R_mat[:, i])
-        # Perform a random shift by multiplying the poly with a random factor alpha
-        alpha_Vi = poly_Vi * alpha
-        # W_i(x) = interpolate the i-th column of matrix W
-        poly_Wi = galois.lagrange_poly(xs, O_mat[:, i])
-        # Evaluate the above polynomial at tau, then get the sum
-        #       = beta*U_i(tau) + alpha*V_i(tau) + W_i(tau)
-        sum_tau = beta_Ui(tau) + alpha_Vi(tau) + poly_Wi(tau)
-        # Multiply the sum with the elliptic curve point, then append it to the returned list
-        taus_for_C.append(multiply(point, int(sum_tau)))
-    return taus_for_C
-
 """
 Given three matrices L, R and O, generate powers of tau for public and private input, 
 i,e., C = beta*U + alpha*V + W
@@ -74,7 +51,7 @@ i,e., C = beta*U + alpha*V + W
      - one related to public inputs (i.e., first l values in the witness vector) will be for verifier
      - one related to private inputs (i.e, last m - l values in the witness vector) will be for prover
 """
-def generate_powers_of_tau_for_inputs(tau, d, m, point, L_mat, R_mat, O_mat, alpha, beta, ell, gamma_inv, delta_inv):
+def generate_powers_of_tau_for_inputs(powers_of_tau, d, m, L_mat, R_mat, O_mat, alpha, beta, ell, gamma_inv, delta_inv):
     taus_for_public_inputs = []
     taus_for_private_inputs = []
     # require degree + 1 points to interpolate a polynomial of degree d
@@ -91,15 +68,14 @@ def generate_powers_of_tau_for_inputs(tau, d, m, point, L_mat, R_mat, O_mat, alp
         alpha_Vi = poly_Vi * alpha
         # W_i(x) = interpolate the i-th column of matrix W
         poly_Wi = galois.lagrange_poly(xs, O_mat[:, i])
-        # Evaluate the above polynomial at tau, then get the sum
-        #       = beta*U_i(tau) + alpha*V_i(tau) + W_i(tau)
-        sum_tau = beta_Ui(tau) + alpha_Vi(tau) + poly_Wi(tau)
 
-        # Multiply the sum with the elliptic curve point, then append it to the returned list
+        sum_poly = beta_Ui + alpha_Vi + poly_Wi
+
         if i < ell:
-            taus_for_public_inputs.append(multiply(point, int(sum_tau*gamma_inv)))
+            taus_for_public_inputs.append(inner_product(powers_of_tau, (sum_poly.coeffs[::-1]) * gamma_inv))
         else:
-            taus_for_private_inputs.append(multiply(point, int(sum_tau*delta_inv)))
+            taus_for_private_inputs.append(inner_product(powers_of_tau, (sum_poly.coeffs[::-1]) * delta_inv))
+
     return taus_for_public_inputs, taus_for_private_inputs
 
 def transform_matrix2poly(mat, wit, d):
@@ -170,7 +146,7 @@ if __name__ == '__main__':
         Phase 1: setup for all circuits
     """
     # 1. Get a random value tau
-    tau = Fp(sample_Zp(p))
+    tau = sample_Zp(p)
     # 2. Calculate tau*G1, tauˆ2*G1, ..., tauˆd*G1
     powers_of_tau_for_G1 = generate_powers_of_tau(tau, d, G1)
     # Calculate tau*G2, tauˆ2*G2, ..., tauˆd*G2
@@ -218,11 +194,11 @@ if __name__ == '__main__':
     # Check #1
     # Calculate powers of tau for evaluating h(x)t(x) at tau
     #      tau*t(tau)*G1, tauˆ2*t(tau)*G1, ..., tauˆ{d - 1}*t(tau)*G1
-    t_tau_G1 = multiply(G1, int(t_poly(tau)))
-    powers_of_tau_for_ht = generate_powers_of_tau(tau, d - 1, t_tau_G1)
+    t_tau = t_poly(tau)
+    powers_of_tau_for_ht = [multiply(powers_of_tau_for_G1[i], int(t_tau)) for i in range(d)]
     evaluate_ht_on_G1 = inner_product(powers_of_tau_for_ht, h_poly.coeffs[::-1])
 
-    _, taus_for_C = generate_powers_of_tau_for_inputs(tau, d, m, G1, L, R, O, alpha, beta, 0, 1, 1)
+    _, taus_for_C = generate_powers_of_tau_for_inputs(powers_of_tau_for_G1, d, m, L, R, O, alpha, beta, 0, 1, 1)
     C_taus = inner_product(taus_for_C, witness)
     C = add(C_taus, evaluate_ht_on_G1)
 
@@ -238,10 +214,11 @@ if __name__ == '__main__':
     """
     ell = 2  # number of public inputs. In this example, public inputs are 1 and out
     taus_for_public_inputs, taus_for_private_inputs = \
-        generate_powers_of_tau_for_inputs(tau, d, m, G1, L, R, O, alpha, beta, ell, 1, 1)
+        generate_powers_of_tau_for_inputs(powers_of_tau_for_G1, d, m, L, R, O, alpha, beta, ell, 1, 1)
     C_public = inner_product(taus_for_public_inputs, witness[:ell])
     C_private_taus = inner_product(taus_for_private_inputs, witness[ell:])
     C_private = add(C_private_taus, evaluate_ht_on_G1)
+
     # Check #2
     if pairing(beta_B2, alpha_A) == pairing(beta_G2, alpha_G1) * pairing(G2, C_private) * pairing(G2, C_public):
         print("Pass test #2, proof is correct after separating public and private inputs!")
@@ -252,27 +229,28 @@ if __name__ == '__main__':
     """
     Introducing gamma and delta to prevent forgeries with public inputs 
     """
-    gamma = Fp(sample_Zp(p))
+    gamma = sample_Zp(p)
     gamma_G2 = multiply(G2, int(gamma))  # gamma*G2
     gamma_inv = Fp(1) / Fp(gamma)
-    delta = Fp(sample_Zp(p))
+    delta = sample_Zp(p)
     delta_G1 = multiply(G1, int(delta))  # delta*G1
     delta_G2 = multiply(G2, int(delta))  # delta*G2
     delta_inv = Fp(1) / Fp(delta)
 
     # Calculate powers of tau for evaluating (h(x)t(x))/delta at tau
     #      delta^{-1}*tau*t(tau)*G1, delta^{-1}*tauˆ2*t(tau)*G1, ..., delta^{-1}*tauˆ{d - 1}*t(tau)*G1
-    t_tau_delta_G1 = multiply(G1, int(Fp(t_poly(tau)) / Fp(delta)))
-    powers_of_tau_for_ht = generate_powers_of_tau(tau, d - 1, t_tau_delta_G1)
+    t_tau_delta = Fp(t_poly(tau) * delta_inv)
+    powers_of_tau_for_ht = [multiply(powers_of_tau_for_G1[i], int(t_tau_delta)) for i in range(d)]
     evaluate_ht_on_G1 = inner_product(powers_of_tau_for_ht, h_poly.coeffs[::-1])
 
     # Calculate alpha*V(tau) + beta*U(tau) + W(au)
     taus_for_public_inputs, taus_for_private_inputs = \
-        generate_powers_of_tau_for_inputs(tau, d, m, G1, L, R, O, alpha, beta, ell, gamma_inv, delta_inv)
+        generate_powers_of_tau_for_inputs(powers_of_tau_for_G1, d, m, L, R, O, alpha, beta, ell, gamma_inv, delta_inv)
 
     C_public = inner_product(taus_for_public_inputs, witness[:ell])
     C_private_taus = inner_product(taus_for_private_inputs, witness[ell:])
     C_private = add(C_private_taus, evaluate_ht_on_G1)
+
     # Check #3
     if pairing(beta_B2, alpha_A) == pairing(beta_G2, alpha_G1) * \
             pairing(delta_G2, C_private) * pairing(gamma_G2, C_public):
@@ -302,22 +280,21 @@ if __name__ == '__main__':
 
 
     """
-        Compute C = (W(x) + beta*U(x) + alpha*V(x))*w + h(x)t(x)
+        Compute C = (W(x) + beta*U(x) + alpha*V(x))*w + h(x)t(x) + sA + rB1 + rs*delta*G1
     """
-    #C_private_inputs = inner_product(taus_for_private_inputs, witness[ell:])
-    #C_ht = add(C_private_inputs, evaluate_ht_on_G1)
     C_ht_sa = add(C_private, sA);
     C_ht_sa_rb = add(C_ht_sa, rB1);
     C = add(C_ht_sa_rb, neg(rs_delta_G1))
 
     """
     Verifying: verifier obtains a proof from prover, consisting of three elliptic curve points:
-        - beta_B
-        - alpha_A     
-        - C
+        - [A, B2, C]
         and two points from trusted server:
         - alpha_G1
         - beta_G2
+        - C_public 
+        - gamma_G2, 
+        - delta_G2
         
     Accept the proof if the below equation is true. Otherwise, reject
     """
