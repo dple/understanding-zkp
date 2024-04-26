@@ -1,8 +1,8 @@
 from py_ecc.bn128 import G1, G2, pairing, add, multiply, eq, neg
 
 if __name__ == '__main__':
-    print(G1)
-    print(G2)
+    #print(G1)
+    #print(G2)
     P = multiply(G1, 3)
     Q = add(G2, G2)
     """
@@ -10,7 +10,7 @@ if __name__ == '__main__':
     that switches the order of P & Q, i.e., the first argument of pairing will be the element, Q, 
     in the extension field F_pˆ12, and the second argument, P, will be in the base field F_p   
     """
-    print(pairing(Q, P))        # The result will be an element in the extension field, F_pˆ12,
+    print("pairing(Q, P) = ", pairing(Q, P))        # The result will be an element in the extension field, F_pˆ12,
                                 # representing by 12 element in the base field.
                                 # The computation takes a few seconds, pretty slow,
                                 # perhaps the implementation of pairing in py-ecc is not optimized

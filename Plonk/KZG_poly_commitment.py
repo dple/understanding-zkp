@@ -26,6 +26,7 @@ if __name__ == '__main__':
     # Trusted setup 
     print("Starting the trusted setup process ...")
     tau = random.randint(1, p)      # get a random number tau
+    print("tau: ", tau)
     d = 4                           # here we are working with a poly of degree 4
     powers_of_tau_G1 = generate_powers_of_tau(tau, d, G1)   # Generate powers of tau [G1, [tau]G1, [tau^2]G1, [tau^3]G1, [tau^4]G1]
     tauG2 = multiply(G2, int(tau))
@@ -33,16 +34,21 @@ if __name__ == '__main__':
     print("Committing poly f(X) ...")
     fX = galois.Poly([5, 0, 0, - 2, 3], field = GF)
     com_f = inner_product(powers_of_tau_G1, fX.coeffs[::-1])
+    print("Commitment com_f: ", com_f)
 
     # Open the commitment
     print("Opening the commitment ...")    
     u = 2               # Verifier chooses a random v, e.g., v = 2, then sends it the prover
     # Prover calculates v and the polynomial Q(X)
     v = fX(u)           
-    qX = (fX - v) // galois.Poly([1, -u], field = GF)
+    tX = galois.Poly([1, -u], field = GF)
+    qX = (fX - v) // tX
+    remainder = (fX - v) % tX
+    assert remainder == 0, "The remainder polynomial is not equal to zero!"
 
     print("Generating proof ...")
     com_q = inner_product(powers_of_tau_G1[:d], qX.coeffs[::-1])
+    print("Proof com_q: ", com_q)
 
     # Verifier
     uG2 = multiply(G2, int(u))
