@@ -1,6 +1,6 @@
 """
     Python code demonstrating KZG polynomial commitment scheme
-    Assume prover need to commit the polynomial f(X) = 5X^4 - 2X +3. Then he proves evaluate it at 2, i.e., f(2) = 79 
+    Assume prover need to commit the polynomial f(X) = 5X^4 - 2X +3
 """
 from py_ecc.bn128 import G1, G2, multiply, add, neg, curve_order, Z1, pairing
 import galois
