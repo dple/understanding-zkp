@@ -1,11 +1,10 @@
 """
     Python code demonstrating KZG polynomial commitment scheme
-    Assume prover need to commit the polynomial f(X) = 5X^4 - 2X +3. Then he proves evaluate it at 2, i.e., f(2) = 79 
+    Assume prover need to commit the polynomial f(X) = 5X^4 - 2X +3
 """
 from py_ecc.bn128 import G1, G2, multiply, add, neg, curve_order, Z1, pairing
 import galois
 from functools import reduce
-import numpy as np
 import random
 
 def generate_powers_of_tau(tau, degree, point):
@@ -38,25 +37,26 @@ if __name__ == '__main__':
 
     # Open the commitment
     print("Opening the commitment ...")    
-    u = 2               # Verifier chooses a random v, e.g., v = 2, then sends it the prover
-    # Prover calculates v and the polynomial Q(X)
+    u = random.randint(1, p)               # Verifier chooses a random u, then sends it the prover
+    # Prover evaluates the polynomial fX at u, and calculates the polynomial Q(X) = (f(X) - f(u)) / (x - u)
     v = fX(u)           
     tX = galois.Poly([1, -u], field = GF)
     qX = (fX - v) // tX
     remainder = (fX - v) % tX
     assert remainder == 0, "The remainder polynomial is not equal to zero!"
 
+    # Prover generates a proof of commitment com_f for the random challenge u, then sends it to the verifier
     print("Generating proof ...")
-    com_q = inner_product(powers_of_tau_G1[:d], qX.coeffs[::-1])
-    print("Proof com_q: ", com_q)
+    proof = inner_product(powers_of_tau_G1[:d], qX.coeffs[::-1])
+    print("Proof com_q: ", proof)
 
-    # Verifier
+    # Verifier computes the below values and verify the proof using pairings
     uG2 = multiply(G2, int(u))
     tau_minus_uG2 = add(tauG2, neg(uG2))
     vG1 = multiply(G1, int(v))
     com_f_minus_vG1 = add(com_f, neg(vG1))
 
-    if pairing(tau_minus_uG2, com_q) == pairing(G2, com_f_minus_vG1):
+    if pairing(tau_minus_uG2, proof) == pairing(G2, com_f_minus_vG1):
         print("Proof for commitment is correct!")
     else:
         print("Failed to test the proof!")
