@@ -297,6 +297,8 @@ if __name__ == '__main__':
         - delta_G2
         
     Accept the proof if the below equation is true. Otherwise, reject
+
+    Note that: pairing(beta_G2, alpha_G1) could be pre-computed to make the proof verifications faster
     """
     # Final check
     if pairing(B2, A) == pairing(beta_G2, alpha_G1) * \
