@@ -174,7 +174,7 @@ if __name__ == '__main__':
     values, no one could recover tau unless he could solve the discrete logarithm problem.   
 
     Verifier will check that relation by checking if:
-            pairing(B, A) = pairing(G2, Cs), 
+            pairing(B, A) = pairing(G2, C), 
     where A = U(tau)*G1, B = V(tau)*G2, C = (W(tau) + t(tau)*h(tau))*G1
     """
 
