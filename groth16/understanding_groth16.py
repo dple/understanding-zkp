@@ -151,6 +151,11 @@ if __name__ == '__main__':
     powers_of_tau_for_G1 = generate_powers_of_tau(tau, d, G1)
     # Calculate tau*G2, tauˆ2*G2, ..., tauˆd*G2
     powers_of_tau_for_G2 = generate_powers_of_tau(tau, d, G2)
+    # Calculate powers of tau for evaluating h(x)t(x) at tau
+    # Calculate tau*t(tau)*G1, tauˆ2*t(tau)*G1, ..., tauˆ{d - 1}*t(tau)*G1
+    t_tau = t_poly(tau)
+    powers_of_tau_for_ht = [multiply(powers_of_tau_for_G1[i], int(t_tau)) for i in range(d)]
+
 
     """
         Phase 2: trusted setup per circuit. This setup requires for each individual circuit
@@ -192,10 +197,6 @@ if __name__ == '__main__':
     beta_B2 = add(beta_G2, B2)          # random shift for B, [beta + V(tau)]*G2
 
     # Check #1
-    # Calculate powers of tau for evaluating h(x)t(x) at tau
-    #      tau*t(tau)*G1, tauˆ2*t(tau)*G1, ..., tauˆ{d - 1}*t(tau)*G1
-    t_tau = t_poly(tau)
-    powers_of_tau_for_ht = [multiply(powers_of_tau_for_G1[i], int(t_tau)) for i in range(d)]
     evaluate_ht_on_G1 = inner_product(powers_of_tau_for_ht, h_poly.coeffs[::-1])
 
     _, taus_for_C = generate_powers_of_tau_for_inputs(powers_of_tau_for_G1, d, m, L, R, O, alpha, beta, 0, 1, 1)
